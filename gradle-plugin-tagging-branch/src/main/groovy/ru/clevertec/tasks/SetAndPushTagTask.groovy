@@ -1,22 +1,32 @@
 package ru.clevertec.tasks
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
+import ru.clevertec.extension.VersionExtension
+import ru.clevertec.services.GitService
 import ru.clevertec.services.TagService
 
 class SetAndPushTagTask extends DefaultTask {
 
+    @Input
+    def tagService = new TagService()
+
+    @Input
+    def gitService = new GitService()
+
     @TaskAction
     void setAndPushTag() {
-        def tagService = new TagService(project)
-        def currentVersion = project.version
+        def extension = project.extensions.getByType(VersionExtension)
+        def currentVersion = extension.currentVersion
 
         if (!tagService.hasTag(currentVersion)) {
-            tagService.setGitTag(currentVersion)
-            tagService.publishTag(currentVersion)
+            gitService.setGitTag(currentVersion)
+            gitService.publishTag(currentVersion)
             println "Tag ${currentVersion} set and pushed"
         } else {
             println "Tag ${currentVersion} already exists"
+            throw new RuntimeException("Tag already exists")
         }
     }
 }
